@@ -5,6 +5,7 @@ services:
     env_file:
       - path: .env
         required: false
+    user: "${UID:-1001}:${GID:-1001}"
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -60,6 +61,9 @@ services:
       - no-new-privileges:true
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-999}"
     ports:
       - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
@@ -91,6 +95,7 @@ services:
 
   openclaw-cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
+    user: "${UID:-1001}:${GID:-1001}"
     network_mode: "service:openclaw-gateway"
     env_file:
       - path: .env

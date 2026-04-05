@@ -202,6 +202,9 @@ LABEL org.opencontainers.image.base.name="docker.io/library/node:24-bookworm-sli
 # ── Stage 3: Runtime ────────────────────────────────────────────
 FROM base-runtime
 ARG OPENCLAW_BUNDLED_PLUGIN_DIR
+ARG OPENCLAW_DOCKER_APT_UPGRADE
+ARG UID=1001
+ARG GID=1001
 
 # OCI base-image metadata for downstream image consumers.
 # If you change these annotations, also update:
@@ -213,6 +216,10 @@ LABEL org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
   org.opencontainers.image.licenses="MIT" \
   org.opencontainers.image.title="OpenClaw" \
   org.opencontainers.image.description="OpenClaw gateway and CLI runtime container image"
+
+RUN groupmod -g ${GID} node \
+    && usermod -u ${UID} -g ${GID} node \
+    && chown -R ${UID}:${GID} /home/node
 
 WORKDIR /app
 
@@ -228,7 +235,7 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
       ca-certificates curl git hostname lsof openssl procps python3 tini && \
     update-ca-certificates
 
-RUN chown node:node /app
+RUN chown ${UID}:${GID} /app
 
 COPY --from=runtime-assets --chown=node:node /app/dist ./dist
 COPY --from=runtime-assets --chown=node:node /app/node_modules ./node_modules
